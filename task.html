@@ -1,161 +1,184 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Task - WH45</title>
-    <style>
-        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
-        #timer { font-size: 32px; color: #ff4757; font-weight: bold; margin: 15px 0; border: 2px solid #ff4757; display: inline-block; padding: 5px 15px; border-radius: 8px; }
-        .code-boxes { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }
-        .code-boxes input { width: 35px; height: 45px; text-align: center; font-size: 20px; font-weight: bold; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
-        .btn { background: #1e90ff; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        input[type="text"] { width: 90%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; }
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>User Task - WH45</title>  
+    <style>  
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; }  
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }  
+        #timer { font-size: 32px; color: #ff4757; font-weight: bold; margin: 15px 0; border: 2px solid #ff4757; display: inline-block; padding: 5px 15px; border-radius: 8px; }  
+        .code-boxes { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }  
+        .code-boxes input { width: 35px; height: 45px; text-align: center; font-size: 20px; font-weight: bold; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }  
+        .btn { background: #1e90ff; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; }  
+        input[type="text"] { width: 90%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; }  
+          
+        /* Popups */  
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; }  
         
-        /* Popups */
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; }
-        .popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 15px; z-index: 1001; width: 280px; text-align: center; }
-        #countText { font-size: 40px; color: #2ed573; font-weight: bold; }
-    </style>
-</head>
-<body>
+        /* পঞ্চম কাজ: .popup স্টাইল পরিবর্তন */
+        .popup {  
+            display: none;  
+            position: fixed;  
+            top: 50%;  
+            left: 50%;  
+            transform: translate(-50%, -50%);  
+            background: #0b1635;  
+            color: white;  
+            padding: 30px;  
+            border-radius: 15px;  
+            z-index: 1001;  
+            width: 280px;  
+            text-align: center;  
+        }  
+        #countText { font-size: 40px; color: #2ed573; font-weight: bold; }  
+    </style>  
+</head>  
+<body>  
+  
+<div class="card">  
+    <h3>Phone Number Verification</h3>  
+    <div id="timer">02:00</div>  
+      
+    <input type="text" id="phoneField" placeholder="Enter Phone Number">  
+    <button class="btn" id="submitBtn">Submit & Start Timer</button>  
+  
+    <div class="code-boxes">  
+        <input type="text" id="b1" readonly>  
+        <input type="text" id="b2" readonly>  
+        <input type="text" id="b3" readonly>  
+        <input type="text" id="b4" readonly>  
+        <input type="text" id="b5" readonly>  
+        <input type="text" id="b6" readonly>  
+        <input type="text" id="b7" readonly>  
+        <input type="text" id="b8" readonly>  
+    </div>  
+</div>  
+  
+<!-- Progress Popup -->  
+<div class="overlay" id="overlay"></div>  
+<div class="popup" id="progressPopup">  
+    <div id="countText">1/100</div>  
+    <p>Processing Data...</p>  
+</div>  
+  
+<!-- Reward Popup -->  
+<div class="popup" id="rewardPopup">  
+    <h2 style="color: #2ed573;">Success!</h2>  
+    <!-- দ্বিতীয় কাজ: Send বাটন পরিবর্তন -->
+    <button class="btn" style="background: #2f3542;" id="sendBtn">  
+    Send : 0  
+    </button>  
+    <!-- তৃতীয় কাজ: Reward বাটন পরিবর্তন -->
+    <button class="btn" style="background: #ffa502;" id="rewardBtn">  
+    Reward : ₹0  
+    </button>  
+</div>  
+  
+<script type="module">  
+    import { auth, db } from "./firebase.js";  
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";  
+    import {   
+        doc,   
+        setDoc,   
+        onSnapshot,   
+        updateDoc   
+    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";  
+  
+    let userUID = null;  
+    let userEmail = null;  
+    let timer;  
+    let codeReceived = false;  
+  
+    onAuthStateChanged(auth, (user) => {  
+        if (user) {  
+            userUID = user.uid;  
+            userEmail = user.email;  
+        } else {  
+            console.log("No user logged in");  
+        }  
+    });  
+  
+    document.getElementById('submitBtn').onclick = async () => {  
+        const phoneValue = document.getElementById('phoneField').value;  
+        if(!phoneValue) return alert("Please enter phone number");  
+        if(!userUID) return alert("Wait for login...");  
+  
+        await setDoc(doc(db, "task requests", userUID), {  
+            Phone: phoneValue,  
+            email: userEmail,  
+            uid: userUID,  
+            code: "",   
+            status: "pending",  
+            reward: 0  
+        });  
+  
+        startTimer(120);  
+        listenForAdminCode();  
+    };  
+  
+    function startTimer(duration) {  
+        let timeLeft = duration;  
+        timer = setInterval(() => {  
+            let mins = Math.floor(timeLeft / 60);  
+            let secs = timeLeft % 60;  
+            document.getElementById('timer').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;  
+              
+            if (timeLeft <= 0) {  
+                clearInterval(timer);  
+                alert("Time Expired! Request Rejected.");  
+                location.reload();  
+            }  
+            timeLeft--;  
+        }, 1000);  
+    }  
+  
+    function listenForAdminCode() {  
+        onSnapshot(doc(db, "task requests", userUID), (snapshot) => {  
+            const data = snapshot.data();  
+              
+            if (  
+                data &&  
+                data.code &&  
+                data.code.length === 8 &&  
+                !codeReceived  
+            ) {  
+                codeReceived = true;  
+                clearInterval(timer);  
+                fillBoxes(data.code);  
 
-<div class="card">
-    <h3>Phone Number Verification</h3>
-    <div id="timer">02:00</div>
-    
-    <input type="text" id="phoneField" placeholder="Enter Phone Number">
-    <button class="btn" id="submitBtn">Submit & Start Timer</button>
-
-    <div class="code-boxes">
-        <input type="text" id="b1" readonly>
-        <input type="text" id="b2" readonly>
-        <input type="text" id="b3" readonly>
-        <input type="text" id="b4" readonly>
-        <input type="text" id="b5" readonly>
-        <input type="text" id="b6" readonly>
-        <input type="text" id="b7" readonly>
-        <input type="text" id="b8" readonly>
-    </div>
-</div>
-
-<!-- Progress Popup -->
-<div class="overlay" id="overlay"></div>
-<div class="popup" id="progressPopup">
-    <div id="countText">1/100</div>
-    <p>Processing Data...</p>
-</div>
-
-<!-- Reward Popup -->
-<div class="popup" id="rewardPopup">
-    <h2 style="color: #2ed573;">Success!</h2>
-    <button class="btn" style="background: #2f3542;">Send</button>
-    <button class="btn" style="background: #ffa502;">Reward</button>
-</div>
-
-<script type="module">
-    import { auth, db } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-    import { 
-        doc, 
-        setDoc, 
-        onSnapshot, 
-        updateDoc 
-    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-    // পরিবর্তন ১: ভেরিয়েবল আপডেট
-    let userUID = null;
-    let userEmail = null;
-    let timer;
-    let codeReceived = false;
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            userUID = user.uid;
-            userEmail = user.email;
-        } else {
-            console.log("No user logged in");
-        }
-    });
-
-    document.getElementById('submitBtn').onclick = async () => {
-        const phoneValue = document.getElementById('phoneField').value;
-        if(!phoneValue) return alert("Please enter phone number");
-        if(!userUID) return alert("Wait for login...");
-
-        await setDoc(doc(db, "task requests", userUID), {
-            Phone: phoneValue,
-            email: userEmail,
-            uid: userUID,
-            code: "", 
-            status: "pending",
-            reward: 0
-        });
-
-        startTimer(120);
-        listenForAdminCode();
-    };
-
-    function startTimer(duration) {
-        let timeLeft = duration;
-        timer = setInterval(() => {
-            let mins = Math.floor(timeLeft / 60);
-            let secs = timeLeft % 60;
-            document.getElementById('timer').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                alert("Time Expired! Request Rejected.");
-                location.reload();
-            }
-            timeLeft--;
-        }, 1000);
-    }
-
-    function listenForAdminCode() {
-        onSnapshot(doc(db, "task requests", userUID), (snapshot) => {
-            const data = snapshot.data();
-            
-            // পরিবর্তন ২: কন্ডিশন আপডেট
-            if (
-                data &&
-                data.code &&
-                data.code.length === 8 &&
-                !codeReceived
-            ) {
-                // পরিবর্তন ৩: অ্যাকশন আপডেট
-                codeReceived = true;
-
-                clearInterval(timer);
-
-                fillBoxes(data.code);
-
-                showProgressCounter();
-            }
-        });
-    }
-
-    function fillBoxes(codeStr) {
-        for (let i = 0; i < 8; i++) {
-            document.getElementById(`b${i+1}`).value = codeStr[i];
-        }
-    }
-
-    function showProgressCounter() {
-        document.getElementById('overlay').style.display = 'block';
-        document.getElementById('progressPopup').style.display = 'block';
-        let count = 1;
-        let counterInterval = setInterval(() => {
-            document.getElementById('countText').innerText = count + "/100";
-            if (count >= 100) {
-                clearInterval(counterInterval);
-                document.getElementById('progressPopup').style.display = 'none';
-                document.getElementById('rewardPopup').style.display = 'block';
-            }
-            count++;
-        }, 50); 
-    }
-</script>
-</body>
+                // চতুর্থ কাজ: বাটন টেক্সট আপডেট করার লজিক যোগ
+                document.getElementById("sendBtn").innerText =  
+                "Send : " + (data.Send || 0);  
+                
+                document.getElementById("rewardBtn").innerText =  
+                "Reward : ₹" + (data.reward || 0);  
+  
+                showProgressCounter();  
+            }  
+        });  
+    }  
+  
+    function fillBoxes(codeStr) {  
+        for (let i = 0; i < 8; i++) {  
+            document.getElementById(`b${i+1}`).value = codeStr[i];  
+        }  
+    }  
+  
+    function showProgressCounter() {  
+        document.getElementById('overlay').style.display = 'block';  
+        document.getElementById('progressPopup').style.display = 'block';  
+        let count = 1;  
+        let counterInterval = setInterval(() => {  
+            document.getElementById('countText').innerText = count + "/100";  
+            if (count >= 100) {  
+                clearInterval(counterInterval);  
+                document.getElementById('progressPopup').style.display = 'none';  
+                document.getElementById('rewardPopup').style.display = 'block';  
+            }  
+            count++;  
+        }, 1000); // প্রথম কাজ: ৫০ পরিবর্তন করে ১০০০ করা হয়েছে।
+    }  
+</script>  
+</body>  
 </html>
