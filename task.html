@@ -16,7 +16,6 @@
         /* Popups */  
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; }  
         
-        /* পঞ্চম কাজ: .popup স্টাইল পরিবর্তন */
         .popup {  
             display: none;  
             position: fixed;  
@@ -65,11 +64,9 @@
 <!-- Reward Popup -->  
 <div class="popup" id="rewardPopup">  
     <h2 style="color: #2ed573;">Success!</h2>  
-    <!-- দ্বিতীয় কাজ: Send বাটন পরিবর্তন -->
     <button class="btn" style="background: #2f3542;" id="sendBtn">  
     Send : 0  
     </button>  
-    <!-- তৃতীয় কাজ: Reward বাটন পরিবর্তন -->
     <button class="btn" style="background: #ffa502;" id="rewardBtn">  
     Reward : ₹0  
     </button>  
@@ -89,6 +86,8 @@
     let userEmail = null;  
     let timer;  
     let codeReceived = false;  
+    // প্রথম কাজ: savedData ভেরিয়েবল যোগ
+    let savedData = null;  
   
     onAuthStateChanged(auth, (user) => {  
         if (user) {  
@@ -124,11 +123,23 @@
             let secs = timeLeft % 60;  
             document.getElementById('timer').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;  
               
-            if (timeLeft <= 0) {  
-                clearInterval(timer);  
-                alert("Time Expired! Request Rejected.");  
-                location.reload();  
-            }  
+            // তৃতীয় কাজ: টাইমার শেষ হওয়ার লজিক পরিবর্তন
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+
+                if(codeReceived){
+                    document.getElementById("sendBtn").innerText =
+                    "Send : " + (savedData.Send || 0);
+
+                    document.getElementById("rewardBtn").innerText =
+                    "Reward : ₹" + (savedData.reward || 0);
+
+                    showProgressCounter();
+                } else {
+                    alert("Time Expired! Request Rejected.");
+                    location.reload();
+                }
+            }
             timeLeft--;  
         }, 1000);  
     }  
@@ -143,18 +154,10 @@
                 data.code.length === 8 &&  
                 !codeReceived  
             ) {  
-                codeReceived = true;  
-                clearInterval(timer);  
-                fillBoxes(data.code);  
-
-                // চতুর্থ কাজ: বাটন টেক্সট আপডেট করার লজিক যোগ
-                document.getElementById("sendBtn").innerText =  
-                "Send : " + (data.Send || 0);  
-                
-                document.getElementById("rewardBtn").innerText =  
-                "Reward : ₹" + (data.reward || 0);  
-  
-                showProgressCounter();  
+                // দ্বিতীয় কাজ: লজিক পরিবর্তন করে savedData ব্যবহার
+                codeReceived = true;
+                savedData = data;
+                fillBoxes(data.code);
             }  
         });  
     }  
@@ -177,7 +180,7 @@
                 document.getElementById('rewardPopup').style.display = 'block';  
             }  
             count++;  
-        }, 1000); // প্রথম কাজ: ৫০ পরিবর্তন করে ১০০০ করা হয়েছে।
+        }, 1000); 
     }  
 </script>  
 </body>  
