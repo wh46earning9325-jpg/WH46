@@ -5,29 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
     <title>User Task - WH45</title>  
     <style>  
-        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; }  
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }  
+        body { 
+            font-family: sans-serif; 
+            background: #051238; 
+            display: flex; 
+            justify-content: center; 
+            padding: 10px; 
+        }  
+
+        .card { 
+            background: #1d2b4a; 
+            color: white; 
+            padding: 20px 10px; 
+            border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+            width: 98%;           /* চওড়া সর্বোচ্চ করা হয়েছে */
+            max-width: 500px;      /* বড় স্ক্রিনের জন্য লিমিট বাড়ানো হয়েছে */
+            text-align: center; 
+        }  
+
         #timer { font-size: 32px; color: #ff4757; font-weight: bold; margin: 15px 0; border: 2px solid #ff4757; display: inline-block; padding: 5px 15px; border-radius: 8px; }  
-        .code-boxes { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }  
         
-        /* প্রথম কাজ: CSS পরিবর্তন */
-        .code-boxes input {
-            width: 35px;
-            height: 45px;
+        .code-boxes { 
+            display: flex; 
+            justify-content: center; 
+            margin: 25px 0; 
+            width: 100%;
+        }  
+        
+        /* বক্সটি সর্বোচ্চ চওড়া এবং লম্বা করা হয়েছে */
+        #mainCodeBox {
+            width: 100%;         /* কার্ডের পুরো চওড়া জুড়ে থাকবে */
+            height: 95px;        /* বক্সটি লম্বা করা হয়েছে */
             text-align: center;
-            font-size: 24px;
+            /* আপনার অনুরোধ অনুযায়ী ফন্ট সাইজ কিছুটা ছোট (৩০px) করা হয়েছে যাতে কোডটি সুন্দর দেখায় */
+            font-size: 30px;     
             font-weight: bold;
-            font-family: Arial, sans-serif;
-            color: #000;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #f9f9f9;
+            font-family: 'Arial', sans-serif;
+            color: #fff; 
+            border: 2px solid #34ace0; 
+            border-radius: 10px;
+            background: #24375c;
+            outline: none;
+            letter-spacing: 6px; /* অক্ষরের মাঝে হালকা ফাঁকা রাখা হয়েছে স্পষ্ট বুঝার জন্য */
+            box-sizing: border-box;
+            padding: 0 5px;
+        }
+
+        #mainCodeBox::placeholder {
+            font-size: 20px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.5);
         }
         
         .btn { background: #1e90ff; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; }  
-        input[type="text"] { width: 90%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; }  
+        input[type="text"] { width: 93%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; }  
           
-        /* Popups */  
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; }  
         
         .popup {  
@@ -52,8 +85,7 @@
 <div class="card">  
     <h3>Phone Number Verification</h3>  
     
-    <!-- তৃতীয় কাজ: নির্দেশনাবলী যোগ করা -->
-    <div style="text-align:left;font-size:12px;color:#000;margin-bottom:15px;">
+    <div style="text-align:left;font-size:12px;color:#fff;margin-bottom:15px; padding: 0 5px;">
         <p>1. Working hours are from 8:00 PM to 10:00 PM every day.</p>
         <p>2. Do not reload or refresh this webpage while the task is running.</p>
         <p>3. Within the specified time limit of 2 minutes, you must complete the required task.</p>
@@ -69,14 +101,8 @@
     <button class="btn" id="submitBtn">Submit & Start Timer</button>  
   
     <div class="code-boxes">  
-        <input type="text" id="b1" readonly>  
-        <input type="text" id="b2" readonly>  
-        <input type="text" id="b3" readonly>  
-        <input type="text" id="b4" readonly>  
-        <input type="text" id="b5" readonly>  
-        <input type="text" id="b6" readonly>  
-        <input type="text" id="b7" readonly>  
-        <input type="text" id="b8" readonly>  
+        <!-- সর্বোচ্চ চওড়া একক বক্স -->
+        <input type="text" id="mainCodeBox" readonly placeholder="Waiting for code...">  
     </div>  
 </div>  
   
@@ -172,7 +198,6 @@
         onSnapshot(doc(db, "task requests", userUID), (snapshot) => {  
             const data = snapshot.data();  
             
-            // দ্বিতীয় কাজ: snapshot এর ভেতরে innerText আপডেট
             if(data) {
                 document.getElementById("sendBtn").innerText =
                 "Send : " + (data.Send || 0);
@@ -184,7 +209,7 @@
             if (  
                 data &&  
                 data.code &&  
-                data.code.length === 8 &&  
+                data.code.length > 0 &&  
                 !codeReceived  
             ) {  
                 codeReceived = true;
@@ -195,9 +220,7 @@
     }  
   
     function fillBoxes(codeStr) {  
-        for (let i = 0; i < 8; i++) {  
-            document.getElementById(`b${i+1}`).value = codeStr[i];  
-        }  
+        document.getElementById('mainCodeBox').value = codeStr;  
     }  
   
     function showProgressCounter() {  
