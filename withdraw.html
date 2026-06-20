@@ -241,6 +241,11 @@ getDocs,
 updateDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+// আপনার অনুরোধ অনুযায়ী নিচে এই ইম্পোর্টটি যোগ করা হলো
+import {
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 let currentUser = null;
 let currentBalance = 0;
 
@@ -446,7 +451,6 @@ return;
 }
 
 try {
-// পরিবর্তন ২: Firestore-এ রিকোয়েস্ট যোগ করা এবং ব্যালেন্স আপডেট করার লজিক
 await addDoc(
 collection(db,"withdrawRequests"),
 {
@@ -472,6 +476,7 @@ new Date().toISOString()
 
 );
 
+// পরিবর্তন ২: Firestore-এ ব্যালেন্স আপডেট করা এবং ইন্টারফেসে দেখানোর লজিক
 await updateDoc(
 doc(db,"users",currentUser.uid),
 {
