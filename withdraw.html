@@ -229,10 +229,7 @@ selectedAmount;
 <script type="module">
 import { auth, db } from "./firebase.js";
 
-import {
-onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
+// পরিবর্তন ১: updateDoc যুক্ত করা হয়েছে
 import {
 doc,
 getDoc,
@@ -240,7 +237,8 @@ collection,
 addDoc,
 query,
 where,
-getDocs
+getDocs,
+updateDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 let currentUser = null;
@@ -448,6 +446,7 @@ return;
 }
 
 try {
+// পরিবর্তন ২: Firestore-এ রিকোয়েস্ট যোগ করা এবং ব্যালেন্স আপডেট করার লজিক
 await addDoc(
 collection(db,"withdrawRequests"),
 {
@@ -472,6 +471,21 @@ new Date().toISOString()
 }
 
 );
+
+await updateDoc(
+doc(db,"users",currentUser.uid),
+{
+balance:
+currentBalance - amount
+}
+);
+
+currentBalance =
+currentBalance - amount;
+
+document.getElementById("currentBalance")
+.textContent =
+"₹" + currentBalance;
 
 // পরিবর্তন ৩: হিস্ট্রি আপডেট করার আগে খালি করার লজিক যুক্ত করা হয়েছে
 if(
