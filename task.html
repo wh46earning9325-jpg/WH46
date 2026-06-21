@@ -19,8 +19,8 @@
             padding: 20px 10px; 
             border-radius: 12px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
-            width: 98%;           /* চওড়া সর্বোচ্চ করা হয়েছে */
-            max-width: 500px;      /* বড় স্ক্রিনের জন্য লিমিট বাড়ানো হয়েছে */
+            width: 98%; 
+            max-width: 500px; 
             text-align: center; 
         }  
 
@@ -33,12 +33,10 @@
             width: 100%;
         }  
         
-        /* বক্সটি সর্বোচ্চ চওড়া এবং লম্বা করা হয়েছে */
         #mainCodeBox {
-            width: 100%;         /* কার্ডের পুরো চওড়া জুড়ে থাকবে */
-            height: 95px;        /* বক্সটি লম্বা করা হয়েছে */
+            width: 100%; 
+            height: 95px; 
             text-align: center;
-            /* আপনার অনুরোধ অনুযায়ী ফন্ট সাইজ কিছুটা ছোট (৩০px) করা হয়েছে যাতে কোডটি সুন্দর দেখায় */
             font-size: 30px;     
             font-weight: bold;
             font-family: 'Arial', sans-serif;
@@ -47,7 +45,7 @@
             border-radius: 10px;
             background: #24375c;
             outline: none;
-            letter-spacing: 6px; /* অক্ষরের মাঝে হালকা ফাঁকা রাখা হয়েছে স্পষ্ট বুঝার জন্য */
+            letter-spacing: 6px; 
             box-sizing: border-box;
             padding: 0 5px;
         }
@@ -101,28 +99,31 @@
     <button class="btn" id="submitBtn">Submit & Start Timer</button>  
   
     <div class="code-boxes">  
-        <!-- সর্বোচ্চ চওড়া একক বক্স -->
         <input type="text" id="mainCodeBox" readonly placeholder="Waiting for code...">  
     </div>  
 </div>  
   
-<!-- Progress Popup -->  
 <div class="overlay" id="overlay"></div>  
 <div class="popup" id="progressPopup">  
     <div id="countText">1/100</div>  
     <p>Processing Data...</p>  
 </div>  
   
-<!-- Reward Popup -->  
 <div class="popup" id="rewardPopup">  
     <h2 style="color: #2ed573;">Success!</h2>  
-    <button class="btn" style="background: #2f3542;" id="sendBtn">  
-    Send : 0  
+
+    <button class="btn" style="background:#2f3542;" id="sendBtn">
+        Send : 0
     </button>  
-    <button class="btn" style="background: #ffa502;" id="rewardBtn">  
-    Reward : ₹0  
-    </button>  
-</div>  
+
+    <button class="btn" style="background:#ffa502;" id="rewardBtn">
+        Reward : ₹0
+    </button>
+
+    <button class="btn" style="background:#34ace0;color:white;" id="gotItBtn">
+        Got It
+    </button>
+</div>
   
 <script type="module">  
     import { auth, db } from "./firebase.js";  
@@ -130,6 +131,7 @@
     import {   
         doc,   
         setDoc,   
+        getDoc,   
         onSnapshot,   
         updateDoc   
     } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";  
@@ -144,8 +146,6 @@
         if (user) {  
             userUID = user.uid;  
             userEmail = user.email;  
-        } else {  
-            console.log("No user logged in");  
         }  
     });  
   
@@ -176,14 +176,9 @@
               
             if (timeLeft <= 0) {
                 clearInterval(timer);
-
                 if(codeReceived){
-                    document.getElementById("sendBtn").innerText =
-                    "Send : " + (savedData.Send || 0);
-
-                    document.getElementById("rewardBtn").innerText =
-                    "Reward : ₹" + (savedData.reward || 0);
-
+                    document.getElementById("sendBtn").innerText = "Send : " + (savedData.Send || 0);
+                    document.getElementById("rewardBtn").innerText = "Reward : ₹" + (savedData.reward || 0);
                     showProgressCounter();
                 } else {
                     alert("Time Expired! Request Rejected.");
@@ -197,46 +192,87 @@
     function listenForAdminCode() {  
         onSnapshot(doc(db, "task requests", userUID), (snapshot) => {  
             const data = snapshot.data();  
-            
             if(data) {
-                document.getElementById("sendBtn").innerText =
-                "Send : " + (data.Send || 0);
-
-                document.getElementById("rewardBtn").innerText =
-                "Reward : ₹" + (data.reward || 0);
+                document.getElementById("sendBtn").innerText = "Send : " + (data.Send || 0);
+                document.getElementById("rewardBtn").innerText = "Reward : ₹" + (data.reward || 0);
             }
-              
-            if (  
-                data &&  
-                data.code &&  
-                data.code.length > 0 &&  
-                !codeReceived  
-            ) {  
+            if (data && data.code && data.code.length > 0 && !codeReceived) {  
                 codeReceived = true;
                 savedData = data;
-                fillBoxes(data.code);
+                document.getElementById('mainCodeBox').value = data.code;  
             }  
         });  
     }  
-  
-    function fillBoxes(codeStr) {  
-        document.getElementById('mainCodeBox').value = codeStr;  
-    }  
+
+    async function processReward() {
+        if (!userUID || !savedData) return;
+
+        const userRef = doc(db, "users", userUID);
+        const userSnap = await getDoc(userRef);
+
+        const taskRef = doc(db, "task requests", userUID);
+        const taskSnap = await getDoc(taskRef);
+
+        if(taskSnap.exists()){
+            const taskData = taskSnap.data();
+            if(taskData.status === "completed"){
+                return;
+            }
+        }
+
+        if (userSnap.exists()) {
+            const userData = userSnap.data();
+            
+            const currentBalance = Number(userData.balance) || 0;
+            const currentTotalEarnings = Number(userData.totalEarnings) || 0;
+            const currentCompletedTasks = Number(userData.completedTasks) || 0;
+
+            const rewardAmount = Number(savedData.reward) || 0;
+            const sendAmount = Number(savedData.Send) || 0;
+
+            const newBalance = currentBalance + rewardAmount;
+            const newTotalEarnings = currentTotalEarnings + rewardAmount;
+            const newCompletedTasks = currentCompletedTasks + sendAmount;
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('en-GB');
+            const historyEntry = `\n(${timeStr}, ${dateStr}) WH (+${rewardAmount})`;
+
+            await updateDoc(userRef, {
+                balance: newBalance,
+                totalEarnings: newTotalEarnings,
+                completedTasks: newCompletedTasks,
+                earningHistory: (userData.earningHistory || "") + historyEntry
+            });
+
+            await updateDoc(doc(db, "task requests", userUID), {
+                status: "completed"
+            });
+        }
+    }
   
     function showProgressCounter() {  
         document.getElementById('overlay').style.display = 'block';  
         document.getElementById('progressPopup').style.display = 'block';  
         let count = 1;  
-        let counterInterval = setInterval(() => {  
+        let counterInterval = setInterval(async () => {  
             document.getElementById('countText').innerText = count + "/100";  
             if (count >= 100) {  
                 clearInterval(counterInterval);  
+                
+                await processReward(); 
+                
                 document.getElementById('progressPopup').style.display = 'none';  
                 document.getElementById('rewardPopup').style.display = 'block';  
             }  
             count++;  
         }, 1000); 
     }  
+
+    document.getElementById("gotItBtn").onclick = () => {
+        window.location.href = "dashboard.html";
+    };
 </script>  
 </body>  
 </html>
